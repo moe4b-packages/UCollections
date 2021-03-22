@@ -228,7 +228,7 @@ namespace UCollections
                 }
             }
 
-            public float GetChildernSingleHeight(SerializedProperty property, float spacing)
+            public static float GetChildernSingleHeight(SerializedProperty property, float spacing)
             {
                 if (IsInline(property)) return SingleLineHeight;
 
@@ -238,6 +238,21 @@ namespace UCollections
                     height += SingleLineHeight + spacing;
 
                 return height;
+            }
+
+            public static void DeleteArrayRange(SerializedProperty property, int difference)
+            {
+                for (int i = 0; i < difference; i++)
+                {
+                    var index = property.arraySize - 1;
+
+                    var element = property.GetArrayElementAtIndex(index);
+
+                    if (element.propertyType == SerializedPropertyType.ObjectReference)
+                        element.objectReferenceValue = null;
+
+                    property.DeleteArrayElementAtIndex(index);
+                }
             }
             #endregion
         }

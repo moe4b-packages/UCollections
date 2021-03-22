@@ -154,21 +154,13 @@ namespace UCollections
                     {
                         var difference = keys.arraySize - values.arraySize;
 
-                        for (int i = 0; i < difference; i++)
-                        {
-                            keys.GetArrayElementAtIndex(0).objectReferenceValue = null;
-                            keys.DeleteArrayElementAtIndex(0);
-                        }
+                        DeleteArrayRange(keys, difference);
                     }
                     else if (keys.arraySize < values.arraySize)
                     {
                         var difference = values.arraySize - keys.arraySize;
 
-                        for (int i = 0; i < difference; i++)
-                        {
-                            values.GetArrayElementAtIndex(0).objectReferenceValue = null;
-                            values.DeleteArrayElementAtIndex(0);
-                        }
+                        DeleteArrayRange(values, difference);
                     }
                 }
             }
