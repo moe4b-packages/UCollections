@@ -21,6 +21,7 @@ namespace UCollections
     [Serializable]
     public abstract class UDictionary : UCollection
     {
+#if UNITY_EDITOR
         [CustomPropertyDrawer(typeof(UDictionary), true)]
         public class Drawer : BaseDrawer
         {
@@ -187,6 +188,7 @@ namespace UCollections
             }
             #endregion
         }
+#endif
     }
 
     [Serializable]

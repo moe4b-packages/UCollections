@@ -28,7 +28,8 @@ namespace UCollections
 	{
 		public abstract int Count { get; }
 
-		public abstract class BaseDrawer : PropertyDrawer
+#if UNITY_EDITOR
+        public abstract class BaseDrawer : PropertyDrawer
 		{
             protected SerializedProperty property;
 
@@ -81,7 +82,7 @@ namespace UCollections
                 gui.drawElementCallback = DrawElement;
             }
 
-            #region Height
+#region Height
             public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
             {
                 Set(property);
@@ -108,9 +109,9 @@ namespace UCollections
 
                 return max + ElementHeightPadding;
             }
-            #endregion
+#endregion
 
-            #region Draw
+#region Draw
             public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
             {
                 Set(property);
@@ -180,9 +181,9 @@ namespace UCollections
 
                 EditorGUI.PropertyField(rect, property, true);
             }
-            #endregion
+#endregion
 
-            #region Static Utility
+#region Static Utility
             public static bool IsInline(SerializedProperty property)
             {
                 switch (property.propertyType)
@@ -254,7 +255,8 @@ namespace UCollections
                     property.DeleteArrayElementAtIndex(index);
                 }
             }
-            #endregion
+#endregion
         }
+#endif
     }
 }

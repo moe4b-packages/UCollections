@@ -21,6 +21,7 @@ namespace UCollections
     [Serializable]
     public abstract class UHashSet : UCollection
     {
+#if UNITY_EDITOR
         [CustomPropertyDrawer(typeof(UHashSet), true)]
         public class Drawer : BaseDrawer
         {
@@ -33,6 +34,7 @@ namespace UCollections
                 base.DrawList(rect);
             }
         }
+#endif
     }
 
     [Serializable]
