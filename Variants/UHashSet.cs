@@ -25,13 +25,90 @@ namespace UCollections
         [CustomPropertyDrawer(typeof(UHashSet), true)]
         public class Drawer : BaseDrawer
         {
+            HashSet<int> duplicates;
+            HashSet<int> nullables;
+
+            public const float KeyInfoContextWidth = 20f;
+
+            static GUIContent ConflictGUIContent = GetIconContent("console.warnicon.sml", "Conflicting Key, Data Might be Lost");
+            static GUIContent NullGUIContent = GetIconContent("console.erroricon.sml", "Null Key, Will be Ignored");
+
             protected override SerializedProperty GetList() => property.FindPropertyRelative("list");
 
-            protected override void DrawList(Rect rect)
+            protected override void Init()
+            {
+                base.Init();
+
+                duplicates = new HashSet<int>();
+                nullables = new HashSet<int>();
+                UpdateState();
+            }
+
+            protected override void Draw(Rect rect)
             {
                 EditorGUIUtility.labelWidth = 120f;
 
-                base.DrawList(rect);
+                EditorGUI.BeginChangeCheck();
+
+                base.Draw(rect);
+
+                if (EditorGUI.EndChangeCheck())
+                    UpdateState();
+            }
+
+            protected override void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
+            {
+                if (nullables.Contains(index))
+                {
+                    var area = new Rect(rect.x, rect.y, KeyInfoContextWidth, rect.height);
+
+                    EditorGUI.LabelField(area, NullGUIContent);
+
+                    rect.width -= KeyInfoContextWidth;
+                    rect.x += KeyInfoContextWidth;
+                }
+
+                if (duplicates.Contains(index))
+                {
+                    var area = new Rect(rect.x, rect.y, KeyInfoContextWidth, rect.height);
+
+                    EditorGUI.LabelField(area, ConflictGUIContent);
+
+                    rect.width -= KeyInfoContextWidth;
+                    rect.x += KeyInfoContextWidth;
+                }
+
+                base.DrawElement(rect, index, isActive, isFocused);
+            }
+
+            void UpdateState()
+            {
+                duplicates.Clear();
+                nullables.Clear();
+
+                var elements = new SerializedProperty[list.arraySize];
+
+                for (int i = 0; i < elements.Length; i++)
+                    elements[i] = list.GetArrayElementAtIndex(i);
+
+                for (int x = 0; x < elements.Length; x++)
+                {
+                    if (elements[x].propertyType == SerializedPropertyType.ObjectReference && elements[x].objectReferenceValue == null)
+                        nullables.Add(x);
+
+                    if (duplicates.Contains(x) || nullables.Contains(x)) continue;
+
+                    for (int y = 0; y < elements.Length; y++)
+                    {
+                        if (x == y) continue;
+
+                        if (SerializedProperty.DataEquals(elements[x], elements[y]))
+                        {
+                            duplicates.Add(x);
+                            duplicates.Add(y);
+                        }
+                    }
+                }
             }
         }
 #endif

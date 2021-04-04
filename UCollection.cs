@@ -19,18 +19,18 @@ using Random = UnityEngine.Random;
 
 namespace UCollections
 {
-	public interface IUCollection
-	{
-		int Count { get; }
-	}
+    public interface IUCollection
+    {
+        int Count { get; }
+    }
 
-	public abstract class UCollection : IUCollection
-	{
-		public abstract int Count { get; }
+    public abstract class UCollection : IUCollection
+    {
+        public abstract int Count { get; }
 
 #if UNITY_EDITOR
         public abstract class BaseDrawer : PropertyDrawer
-		{
+        {
             protected SerializedProperty property;
 
             public bool IsExpanded
@@ -82,7 +82,7 @@ namespace UCollections
                 gui.drawElementCallback = DrawElement;
             }
 
-#region Height
+            #region Height
             public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
             {
                 Set(property);
@@ -109,9 +109,9 @@ namespace UCollections
 
                 return max + ElementHeightPadding;
             }
-#endregion
+            #endregion
 
-#region Draw
+            #region Draw
             public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
             {
                 Set(property);
@@ -128,6 +128,8 @@ namespace UCollections
 
             protected virtual void Draw(Rect rect)
             {
+                EditorGUI.indentLevel = 0;
+
                 if (IsExpanded)
                     DrawList(rect);
                 else
@@ -142,7 +144,7 @@ namespace UCollections
             protected virtual void DrawHeader(Rect rect) => DrawHeader(rect, false);
             protected virtual void DrawHeader(Rect rect, bool full)
             {
-                if(full)
+                if (full)
                 {
                     defaults.DrawHeaderBackground(rect);
 
@@ -181,9 +183,9 @@ namespace UCollections
 
                 EditorGUI.PropertyField(rect, property, true);
             }
-#endregion
+            #endregion
 
-#region Static Utility
+            #region Static Utility
             public static bool IsInline(SerializedProperty property)
             {
                 switch (property.propertyType)
@@ -241,21 +243,33 @@ namespace UCollections
                 return height;
             }
 
-            public static void DeleteArrayRange(SerializedProperty property, int difference)
+            public static void DeleteArrayRange(SerializedProperty array, int difference)
             {
                 for (int i = 0; i < difference; i++)
                 {
-                    var index = property.arraySize - 1;
+                    var index = array.arraySize - 1;
 
-                    var element = property.GetArrayElementAtIndex(index);
-
-                    if (element.propertyType == SerializedPropertyType.ObjectReference)
-                        element.objectReferenceValue = null;
-
-                    property.DeleteArrayElementAtIndex(index);
+                    ForceDeleteArrayElement(array, index);
                 }
             }
-#endregion
+
+            public static void ForceDeleteArrayElement(SerializedProperty array, int index)
+            {
+                var property = array.GetArrayElementAtIndex(index);
+
+                if (property.propertyType == SerializedPropertyType.ObjectReference)
+                    property.objectReferenceValue = null;
+
+                array.DeleteArrayElementAtIndex(index);
+            }
+
+            public static GUIContent GetIconContent(string id, string tooltip)
+            {
+                var icon = EditorGUIUtility.IconContent(id);
+
+                return new GUIContent(icon.image, tooltip);
+            }
+            #endregion
         }
 #endif
     }

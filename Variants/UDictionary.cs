@@ -30,11 +30,19 @@ namespace UCollections
             public SerializedProperty keys;
             SerializedProperty values;
 
+            HashSet<int> duplicates;
+            HashSet<int> nullables;
+
             public bool IsAligned => keys.arraySize == values.arraySize;
 
             public const float NestedElementSpacing = 2f;
 
             public const float KeyValuePadding = 10f;
+
+            public const float KeyInfoContextWidth = 20f;
+
+            static GUIContent ConflictGUIContent = GetIconContent("console.warnicon.sml", "Conflicting Key, Data Might be Lost");
+            static GUIContent NullGUIContent = GetIconContent("console.erroricon.sml", "Null Key, Will be Ignored");
 
             protected override void Init()
             {
@@ -42,6 +50,10 @@ namespace UCollections
 
                 keys = list;
                 values = property.FindPropertyRelative("values");
+
+                duplicates = new HashSet<int>();
+                nullables = new HashSet<int>();
+                UpdateState();
 
                 gui.onAddCallback = Add;
                 gui.onRemoveCallback = Remove;
@@ -76,10 +88,18 @@ namespace UCollections
             #region Draw
             protected override void Draw(Rect rect)
             {
-                if (IsAligned)
-                    base.Draw(rect);
-                else
+                if (IsAligned == false)
+                {
                     DrawAlignmentWarning(rect);
+                    return;
+                }
+
+                EditorGUI.BeginChangeCheck();
+
+                base.Draw(rect);
+
+                if (EditorGUI.EndChangeCheck())
+                    UpdateState();
             }
 
             #region Draw Element
@@ -90,6 +110,26 @@ namespace UCollections
 
                 var key = keys.GetArrayElementAtIndex(index);
                 var value = values.GetArrayElementAtIndex(index);
+
+                if (nullables.Contains(index))
+                {
+                    var area = new Rect(rect.x + 2.5f, rect.y, KeyInfoContextWidth, rect.height);
+
+                    EditorGUI.LabelField(area, NullGUIContent);
+
+                    rect.width -= KeyInfoContextWidth;
+                    rect.x += KeyInfoContextWidth;
+                }
+
+                if (duplicates.Contains(index))
+                {
+                    var area = new Rect(rect.x + 2.5f, rect.y, KeyInfoContextWidth, rect.height);
+
+                    EditorGUI.LabelField(area, ConflictGUIContent);
+
+                    rect.width -= KeyInfoContextWidth;
+                    rect.x += KeyInfoContextWidth;
+                }
 
                 var areas = Split(rect, 40, 60);
 
@@ -173,13 +213,18 @@ namespace UCollections
                 values.InsertArrayElementAtIndex(values.arraySize);
 
                 defaults.DoAddButton(list);
+
+                UpdateState();
             }
 
             void Remove(ReorderableList list)
             {
-                values.DeleteArrayElementAtIndex(list.index);
+                ForceDeleteArrayElement(keys, list.index);
+                ForceDeleteArrayElement(values, list.index);
 
-                defaults.DoRemoveButton(list);
+                if (list.index >= list.count) list.index = list.count - 1;
+
+                UpdateState();
             }
 
             void Reorder(ReorderableList list, int oldIndex, int newIndex)
@@ -187,6 +232,36 @@ namespace UCollections
                 values.MoveArrayElement(oldIndex, newIndex);
             }
             #endregion
+
+            void UpdateState()
+            {
+                duplicates.Clear();
+                nullables.Clear();
+
+                var elements = new SerializedProperty[keys.arraySize];
+
+                for (int i = 0; i < elements.Length; i++)
+                    elements[i] = keys.GetArrayElementAtIndex(i);
+
+                for (int x = 0; x < elements.Length; x++)
+                {
+                    if (elements[x].propertyType == SerializedPropertyType.ObjectReference && elements[x].objectReferenceValue == null)
+                        nullables.Add(x);
+
+                    if (duplicates.Contains(x) || nullables.Contains(x)) continue;
+
+                    for (int y = 0; y < elements.Length; y++)
+                    {
+                        if (x == y) continue;
+
+                        if (SerializedProperty.DataEquals(elements[x], elements[y]))
+                        {
+                            duplicates.Add(x);
+                            duplicates.Add(y);
+                        }
+                    }
+                }
+            }
         }
 #endif
     }
