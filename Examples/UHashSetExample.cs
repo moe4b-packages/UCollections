@@ -16,7 +16,7 @@ using UnityEditorInternal;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-namespace UCollections
+namespace MB
 {
     public class UHashSetExample : MonoBehaviour
     {

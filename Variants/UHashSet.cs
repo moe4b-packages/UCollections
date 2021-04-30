@@ -16,7 +16,7 @@ using UnityEditorInternal;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-namespace UCollections
+namespace MB
 {
     [Serializable]
     public abstract class UHashSet : UCollection
